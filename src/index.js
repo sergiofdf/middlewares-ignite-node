@@ -10,19 +10,73 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = users.find(user => user.username === username);
+
+  if (!user){
+    return response.status(404).json({error: "User not found!"});
+  }
+
+  request.user = user;
+  return next();
+
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if(!user.pro){
+    if(user.todos.length >9){
+      return response.status(403).json({error:"Register as pro account to create more tasks!"})
+    }
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find(user => user.username === username);
+  if (!user){
+    return response.status(404).json({error: "User not found!"});
+  }
+
+  // Regular expression to check if string is a valid UUID
+  const regexExp = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+
+  const validateID = regexExp.test(id); 
+
+  if(!validateID){
+    return response.status(400).json({error: "ID is not a valid UUID!"});
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if(!todo){
+    return response.status(404).json({error: "Task is not related to User."});
+  }
+
+  request.todo = todo;
+  request.user = user;
+  return next();
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  
+  const user = users.find(user => user.id === id);
+
+  if (!user){
+    return response.status(404).json({error: "User not found!"});
+  }
+
+  request.user = user;
+  return next();
+
+  
 }
 
 app.post('/users', (request, response) => {
